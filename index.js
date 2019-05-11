@@ -40,14 +40,18 @@ function gridify (lng, lat) {
   let hArr = []
 
   // Push the raw tile numbers into an array
-  for (let z = 0; z < MAXZOOM; z++) {
+  for (let z = 0; z <= MAXZOOM; z++) {
     hArr.push([
       long2tile(lng, z),
       lat2tile(lat, z)
     ])
   }
+  // console.log(hArr[1])
   return hArr.map((a, idz) => {
-    if (idz === 0) return (4 * a[1] + a[0]).toString(16)
+    if (idz === 0) {
+      // console.log(hArr, a, idz)
+      return '' // (4 * a[0] + a[1]).toString(4)
+    }
     else {
       const [lastLngTile, lastLatTile] = hArr[idz - 1]
       const relLngTile = a[0] - ((lastLngTile / Math.pow(2, idz)) * Math.pow(2, idz + 1))

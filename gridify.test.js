@@ -42,25 +42,36 @@ test('encode, decode single', () => {
 })
 
 test('Gridify tst z1', () => {
-  expect(lib.gridify(0.00001, 0.000001)).toBe('0122222222222222')
-  expect(lib.gridify(0.00001, -0.000001)).toBe('0300000000000000')
-  expect(lib.gridify(-0.00001, 0.000001)).toBe('0033333333333333')
-  expect(lib.gridify(-0.00001, -0.000001)).toBe('0211111111111111')
+  const minLat = lib.tile2lat(0, 0)
+
+  expect(lib.gridify(-180, minLat - 0.0000001)).toBe('0000000000000000')
+  expect(lib.gridify(0, minLat - 0.0000001)).toBe('1000000000000000')
+  expect(lib.gridify(-180, 0)).toBe('2000000000000000')
+  expect(lib.gridify(0, 0)).toBe('3000000000000000')
+
+  const minVal = 0.000000000001
+  expect(lib.gridify(-minVal, minVal)).toBe('0333333333333333')
+  expect(lib.gridify(minVal, minVal)).toBe('1222222222222222')
+  expect(lib.gridify(-minVal, -minVal)).toBe('2111111111111111')
+  expect(lib.gridify(minVal, -minVal)).toBe('3000000000000000')
 })
 
 test('degridify', () => {
   const minLat = lib.tile2lat(0, 0)
-  expect(lib.degridify('0').bounds).toEqual([-180, minLat, 180, -minLat])
-  expect(lib.degridify('00').bounds).toEqual([-180, minLat, 0, 0])
-  expect(lib.degridify('01').bounds).toEqual([0, minLat, 180, 0])
-  expect(lib.degridify('02').bounds).toEqual([-180, 0, 0, -minLat])
-  expect(lib.degridify('03').bounds).toEqual([0, 0, 180, -minLat])
+  expect(lib.degridify('0').bounds).toEqual([-180, minLat, 0, 0])
+  expect(lib.degridify('1').bounds).toEqual([0, minLat, 180, 0])
+  expect(lib.degridify('2').bounds).toEqual([-180, 0, 0, -minLat])
+  expect(lib.degridify('3').bounds).toEqual([0, 0, 180, -minLat])
 
-  expect(lib.degridify('000').bounds).toEqual([-180, minLat, -90, 66.51326044311186])
+  expect(lib.degridify('00').bounds).toEqual([-180, minLat, -90, 66.51326044311186])
 
+  // Try to find stanley park. I use Mapbox's debug tile boundaries layer to figure this stuff out
+  // look for The beaver lake viewpoint
   const c = lib.gridify(-123.13901424407958, 49.304195417949884)
-  console.log('HERE', c)
-  expect(lib.degridify(c)).toEqual([-180, minLat, -90, 66.51326044311186])
+  const degrid = lib.degridify(c)
+  expect(degrid.zoom).toEqual(16)
+  expect(degrid.bounds).toEqual([-123.1402587890625, 49.30721745093608, -123.134765625, 49.303635761871256])
+  expect(degrid.tiles).toEqual([10351, 22421])
 })
 
 test('smallestHash', () => {
@@ -78,16 +89,16 @@ test('smallestHash', () => {
   expect(lib.smallestHash(createBounds(c, 40))).toBe('')
 
   // 10 degree Arc
-  expect(lib.smallestHash(createBounds(c, 10))).toBe(gridified.slice(0, 4))
+  expect(lib.smallestHash(createBounds(c, 10))).toBe(gridified.slice(0, 3))
 
   // 0.01 degree Arc
-  expect(lib.smallestHash(createBounds(c, 0.01))).toBe(gridified.slice(0, 12))
+  expect(lib.smallestHash(createBounds(c, 0.01))).toBe(gridified.slice(0, 11))
 
   // So small it doesn't register
   expect(lib.smallestHash(createBounds(c, 0.001))).toBe(gridified)
 
-  // 180 degree Arc. This is technically impossible
-  expect(lib.smallestHash([-0.01, -0.01, 0.01, 0.01])).toBe('0')
+  // Nothing. We cross the 0 0  line and so we have everythign in common
+  expect(lib.smallestHash([-0.01, -0.01, 0.01, 0.01])).toBe('')
 })
 
 test('getRelevantHashes', () => {
