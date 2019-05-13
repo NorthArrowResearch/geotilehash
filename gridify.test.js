@@ -69,9 +69,8 @@ test('degridify', () => {
   // look for The beaver lake viewpoint
   const c = lib.gridify(-123.13901424407958, 49.304195417949884)
   const degrid = lib.degridify(c)
-  expect(degrid.zoom).toEqual(16)
   expect(degrid.bounds).toEqual([-123.1402587890625, 49.30721745093608, -123.134765625, 49.303635761871256])
-  expect(degrid.tiles).toEqual([10351, 22421])
+  expect(degrid.tiles).toEqual([16, 10351, 22421])
 })
 
 test('smallestHash', () => {

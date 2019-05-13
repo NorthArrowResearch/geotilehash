@@ -35,7 +35,7 @@ function decodeSingleHash (hashChar) {
  * @param {*} lng
  * @param {*} lat
  */
-function gridify (lng, lat) {
+function gridify (lng, lat, maxZoom = MAXZOOM) {
   // console.log('gridify', lng, lat)
   let hArr = []
 
@@ -88,12 +88,12 @@ function degridify (hashVal) {
     tile2lat(hArr[hArr.length - 1][1] + 1, finalZoom)
   ]
   const tiles = [
+    hashVal.length,
     hArr[hArr.length - 1][0],
     hArr[hArr.length - 1][1]
   ]
   return {
     bounds,
-    zoom: hashVal.length,
     tiles
   }
 }
