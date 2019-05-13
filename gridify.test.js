@@ -102,20 +102,38 @@ test('smallestHash', () => {
 })
 
 test('getRelevantHashes', () => {
-  const c = [0, 0]
-  // This is the full precision result
-  const gridified = lib.gridify(c[0], c[1])
-  // little helper function
+  // One set of coordinates should return a single tile at max zoom:
+  const test1In = [0, 0, 0, 0]
+  const test1Out = lib.getRelevantHashes(test1In)
+  // getRelevantHelper(test1In, test1Out)
+  expect(test1Out).toEqual(['3000000000000000'])
 
-  expect(lib.getRelevantHashes([0, 0, 0.1, 0.00000001])).toEqual(['300000000000', '300000000002'])
-  expect(lib.getRelevantHashes([0, 0, 0.00000001, 0.1])).toEqual(['300000000000', '300000000001'])
+  // Horizontally displaced. Should return 2 tiles horizonally:
+  const test2In = [0, 0, 0.1, 0]
+  const test2Out = lib.getRelevantHashes(test2In)
+  // getRelevantHelper(test2In, test2Out)
+  expect(test2Out).toEqual(['300000000000', '300000000001'])
 
-  // const resultExpect1 = lib.getRelevantHashes([0, 0, 0.00000001, 0.1])
-  // const resultExpect2Wide = lib.getRelevantHashes([0, 0, 0.00000001, 0.1])
-  // const resultExpect2Tall = lib.getRelevantHashes([0, 0, 0.00000001, 0.1])
+  // Vertically displaced. Should return 2 tiles vertically:
+  const test3In = [0, 0, 0, -0.1]
+  const test3Out = lib.getRelevantHashes(test3In)
+  // getRelevantHelper(test3In, test3Out)
+  expect(test3Out).toEqual(['300000000000', '300000000002'])
 
-  // 4 tiles at z 6: 6/9/21  6/10/21 6/9/22 6/10/22
-  const resultExpect4 = lib.getRelevantHashes([ -125.20019531249999, 46.56641407568593, -119.783935546875, 49.880477638742555 ])
+  // Quad spread. Should return 4 tile:
+  const test4In = [10, 10, -10, -10]
+  const test4Out = lib.getRelevantHashes(test4In)
+  // getRelevantHelper(test4In, test4Out)
+  expect(test4Out).toEqual(['12222', '03333', '30000', '21111'])
 
-  resultExpect4.map(r => console.log(`---${r}`, lib.degridify(r)))
+  // // 4 tiles at z 6: 6/9/21  6/10/21 6/9/22 6/10/22
+  const tile4Input = [ -125.20019531249999, 46.56641407568593, -119.783935546875, 49.880477638742555 ]
+  const tile4Output = lib.getRelevantHashes(tile4Input)
+  // getRelevantHelper(tile4Input, tile4Output)
+  expect(tile4Output).toEqual(['021221', '021230', '021203', '021212'])
 })
+
+const getRelevantHelper = (input, arr) => {
+  console.log('input', input)
+  arr.map(r => console.log(`[${r}] => `, lib.degridify(r)))
+}

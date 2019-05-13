@@ -49,7 +49,8 @@ function gridify (lng, lat) {
   // console.log(hArr[1])
   return hArr.map((a, idz) => {
     if (idz === 0) {
-      // console.log(hArr, a, idz)
+      // We skip the first one because there's only one tile and save ourselves
+      // a character in the DB
       return '' // (4 * a[0] + a[1]).toString(4)
     }
     else {
@@ -117,57 +118,54 @@ function smallestHash (bounds) {
   return result
 }
 
+/**
+ * Find the smallest number of adjavent tiles that contain the bounding rectangle
+ * @param {*} inBounds
+ */
 function getRelevantHashes (inBounds) {
-  const corner1 = gridify(inBounds[0], inBounds[1])
-  const corner2 = gridify(inBounds[2], inBounds[3])
+  const corners = [
+    gridify(inBounds[0], inBounds[1]),
+    gridify(inBounds[2], inBounds[1]),
+    gridify(inBounds[0], inBounds[3]),
+    gridify(inBounds[2], inBounds[3])
+  ]
 
-  let idx = 0
-  let result = ''
-  while (idx < corner1.length && corner1[idx] === corner2[idx]) {
-    result += corner1[idx]
-    idx++
+  let zidbase = 0
+  // Do a quick count to see how many characters we have in common to begin with
+  while (
+    zidbase < corners[0].length &&
+    corners[0][zidbase] === corners[1][zidbase] &&
+    corners[0][zidbase] === corners[2][zidbase] &&
+    corners[0][zidbase] === corners[3][zidbase]
+  ) zidbase++
+
+  // Now find the minimum zoom where lat and lng for the corners are less than 1 tile apart
+  let zdLng = zidbase
+  // Remember we start at Zoom level 1 so there's an off-by-one problem here
+  while (zdLng < MAXZOOM &&
+    Math.abs(long2tile(inBounds[2], zdLng + 1) - long2tile(inBounds[0], zdLng + 1)) < 2
+  ) {
+    // console.log('zdLng', long2tile(inBounds[2], zdLng), long2tile(inBounds[0], zdLng), zdLng + 1)
+    zdLng++
   }
 
-  let zdx = idx
-  while (zdx < MAXZOOM && long2tile(inBounds[2], zdx) - long2tile(inBounds[0], zdx) < 1) zdx++
-
-  let zdy = idx
-  while (zdy < MAXZOOM && long2tile(inBounds[3], zdy) - long2tile(inBounds[1], zdy) < 1) zdy++
+  let zdLat = zidbase
+  // Remember we start at Zoom level 1 so there's an off-by-one problem here
+  while (zdLat < MAXZOOM &&
+    Math.abs(lat2tile(inBounds[3], zdLat + 1) - lat2tile(inBounds[1], zdLat + 1)) < 2
+  ) {
+    // console.log('zdLat', lat2tile(inBounds[3], zdLat), lat2tile(inBounds[1], zdLat), zdLat + 1)
+    zdLat++
+  }
 
   // Get the smallest hashes in common so we don't have to do big math
-  const minZoom = Math.min(zdy, zdx)
-  // we always return at least one hash
-  const retVal1 = corner1.slice(0, minZoom)
-  const { bounds, zoom, tiles } = degridify(retVal1)
+  const minZoom = Math.min(zdLat, zdLng)
 
-  console.log({ bounds, zoom, tiles, corner1, corner2, retVal1, zdy, zdx, result })
+  const retVal = corners.map(c => c.slice(0, minZoom))
 
-  // If we share every tile in common then there is only one tile we need
-  // if (result.length === retVal1.length) {
-  //   return [encodeSingleHash([relLngTile, relLatTile])]
-  // }
-  // else {
-  //   if (zdx > zdy) {
-  //     return [
-  //       encodeSingleHash([relLngTile, relLatTile]),
-  //       encodeSingleHash([relLngTile + 1, relLatTile])
-  //     ]
-  //   }
-  //   else if (zdy > zdx) {
-  //     return [
-  //       encodeSingleHash([relLngTile, relLatTile]),
-  //       encodeSingleHash([relLngTile, relLatTile + 1])
-  //     ]
-  //   }
-  //   else {
-  //     return [
-  //       encodeSingleHash([relLngTile, relLatTile]),
-  //       encodeSingleHash([relLngTile, relLatTile + 1]),
-  //       encodeSingleHash([relLngTile + 1, relLatTile]),
-  //       encodeSingleHash([relLngTile + 1, relLatTile + 1])
-  //     ]
-  //   }
-  // }
+  // return with no duplicates
+  // https://stackoverflow.com/questions/9229645/remove-duplicate-values-from-js-array
+  return [...new Set(retVal)]
 }
 
 module.exports = {
