@@ -1,6 +1,7 @@
 {
   "name": "geotilehash",
   "version": "1.0.1",
+  "description": "",
   "main": "index.js",
   "license": "MIT",
   "engines": {
