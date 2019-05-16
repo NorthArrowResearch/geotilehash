@@ -132,6 +132,17 @@ test('getRelevantHashes', () => {
   expect(tile4Output).toEqual(['021221', '021230', '021203', '021212'])
 })
 
+test('MISC', () => {
+  console.log(lib.getRelevantHashes([
+    -115.53222656249999,
+    31.203404950917395,
+    -102.3486328125,
+    42.00032514831621
+  ]))
+  // console.log(lib.degridify(''))
+  expect(1).toBe(1)
+})
+
 const getRelevantHelper = (input, arr) => {
   console.log('input', input)
   arr.map(r => console.log(`[${r}] => `, lib.degridify(r)))
